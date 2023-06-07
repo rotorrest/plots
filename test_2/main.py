@@ -43,7 +43,7 @@ data_t3 = data_t3[-100:]
 s.set_menu_path("Test-v2", "Daily Sales")
 s.plt.html(
     html=(f"<h1>The following plots contain the same information</h1>"),
-    order=6,
+    order=0,
     rows_size=0,
     cols_size=12,
 )
@@ -52,9 +52,19 @@ s.plt.line(data=data, order=2, x="Fecha", rows_size=3, cols_size=6)
 s.plt.stacked_bar(data=data, order=3, x="Fecha", rows_size=3, cols_size=6)
 
 # Task 2
-s.set_menu_path("Test-v2", "Daily Sales and Accumulated")
+s.set_menu_path("Test-v2", "Daily Sales & Weekly Accumulated Sales")
+
 s.plt.set_tabs_index(("Charts", "Daily Sales"), order=0)
-s.plt.bar(data=data_t2, order=0, x="Fecha")
-s.plt.change_current_tab("Weekly accumulated")
-s.plt.bar(x="Fecha", order=0, data=data_t3)
+s.plt.bar(data=data_t2,
+          order=0,
+          x="Fecha",
+          y_axis_name="Daily Sales ($)",
+)
+
+s.plt.change_current_tab("Weekly Accumulated Sales")
+s.plt.bar(x="Fecha",
+        order=0,
+        data=data_t3,
+        y_axis_name="Weekly Accumulated ($)",
+)
 s.plt.pop_out_of_tabs_group()

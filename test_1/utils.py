@@ -214,6 +214,7 @@ def calculate_sales_by_month(sales_df: pd.DataFrame) -> List[Dict[str, Union[str
     # Convert the Period object to string in 'YYYY-MM' format
     monthly_sum['Fecha'] = monthly_sum['Fecha'].astype(str)
     monthly_sum['Fecha'] = pd.to_datetime(monthly_sum['Fecha'])
+    monthly_sum["Fecha"] = monthly_sum["Fecha"].dt.date
 
     # Pivot the DataFrame to have Producto as columns and Fecha as rows, with Ventas as values
     pivot_table = monthly_sum.pivot_table(index='Fecha', columns='Producto', values='Ventas', fill_value=0)
@@ -286,7 +287,7 @@ def calculate_sales_per_month(sales_df: pd.DataFrame) -> pd.DataFrame:
     return pivot_sales
 
 
-def calculate_sale_by_region(df):
+def calculate_sale_by_region_group_by_date(df):
     """
     Process the dataframe by region, filtering out future dates and storing the sales data.
 
@@ -294,7 +295,7 @@ def calculate_sale_by_region(df):
         df (pandas.DataFrame): Input dataframe containing sales data.
 
     Returns:
-        list: List of dictionaries containing the processed sales data for each date.
+        list: List of dictionaries containing the processed sales data for each week.
     """
 
     data = []
@@ -319,14 +320,15 @@ def calculate_sale_by_region(df):
 
             # Check if the date is valid (before or equal to the current date)
             if datetime.datetime.strptime(date, "%Y-%m-%d").date() <= current_date:
-                # Check if the data for the current date already exists in 'data' list
-                existing_data = next((d for d in data if d["date"] == date), None)
+                # Check if the data for the current week already exists in 'data' list
+                week_start_date = pd.to_datetime(date).to_period("W").start_time.date()
+                existing_data = next((d for d in data if d["start_date"] == week_start_date), None)
 
                 if existing_data:
                     existing_data[row["Producto"]] = ventas
                 else:
                     product_data = {
-                        "date": datetime.datetime.strptime(date, "%Y-%m-%d").date()
+                        "start_date": week_start_date
                     }
                     for prod in unique_products:
                         product_data[prod] = 0 if prod != row["Producto"] else ventas
@@ -336,23 +338,22 @@ def calculate_sale_by_region(df):
         region_data[region] = data
 
     for i in region_data:
-        # Create a dictionary to store the sum of sales for each product per date
-        sum_sales_by_date = defaultdict(lambda: defaultdict(float))
+        # Create a dictionary to store the sum of sales for each product per week
+        sum_sales_by_week = defaultdict(lambda: defaultdict(float))
 
-        # Iterate through the data and sum the sales for each product per date
+        # Iterate through the data and sum the sales for each product per week
         for record in region_data[i]:
-            date = record["date"]
+            start_date = record["start_date"]
             for product, sales in record.items():
-                if product != "date":
-                    sum_sales_by_date[date][product] += sales
+                if product != "start_date":
+                    sum_sales_by_week[start_date][product] += sales
 
         region_data[i] = [
-            {"date": date, **sales_data}
-            for date, sales_data in sum_sales_by_date.items()
+            {"date": start_date, **sales_data}
+            for start_date, sales_data in sum_sales_by_week.items()
         ]
 
     return region_data
-
 
 def calculate_this_last_week_sales_vs_prediction(df):
     """
