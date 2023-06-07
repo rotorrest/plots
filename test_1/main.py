@@ -73,7 +73,8 @@ s.plt.indicator(
     data=data_indicators,
     order=1,
     rows_size=1,
-    cols_size=12,)
+    cols_size=12,
+)
 
 # Task 2
 s.set_menu_path("Prueba-1", "Regional Sales Distribution")
@@ -131,7 +132,6 @@ regions.remove("End Date")
 regions.remove("Start Date Last Week")
 regions.remove("End Date Last Week")
 regions.sort()
-
 
 s.set_menu_path("Prueba-1", "Filter by Region")
 # Loop through each region
