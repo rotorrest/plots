@@ -16,9 +16,9 @@ Before you can run the script, you need to have Python and the following Python 
 -   pandas
 
 You can install these packages using pip:
-
-`pip install -r requirements.txt `
-
+```
+pip install -r requirements.txt
+```
 We recommend the use of virtual environments.
 
 ### Installing
@@ -31,7 +31,7 @@ git clone https://github.com/<Your_GitHub_Username>/Your_Project_Name`
 Navigate to the project directory:
 
 ```bash
-`cd Your_Project_Name` 
+cd Your_Project_Name
 ```
 ### Running the Script
 
