@@ -1,21 +1,23 @@
 import pandas as pd
 import datetime
 
-from pandas.tseries.offsets import DateOffset
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Union, Tuple
 
 # Auxiliary function
-
-def calculate_weeks(df: pd.DataFrame) -> Tuple[pd.Series, pd.Series, pd.Timestamp, pd.Timestamp, pd.Timestamp, pd.Timestamp]:
+def calculate_weeks(
+    df: pd.DataFrame,
+) -> Tuple[
+    pd.Series, pd.Series, pd.Timestamp, pd.Timestamp, pd.Timestamp, pd.Timestamp
+]:
     """
     Calculate the masks for the current week and last week in the dataframe based on 'Fecha' column.
-    
-    The function determines the start and end dates of the current week and the previous week. 
+
+    The function determines the start and end dates of the current week and the previous week.
     Then it creates boolean masks for the records belonging to the current week and the last week.
-    
+
     Args:
         df (pd.DataFrame): Input dataframe. It should contain a 'Fecha' column with datetime type.
-        
+
     Returns:
         tuple: A tuple containing six elements:
             - mask_this_week (pd.Series): A boolean Series for the records in the current week.
@@ -25,6 +27,7 @@ def calculate_weeks(df: pd.DataFrame) -> Tuple[pd.Series, pd.Series, pd.Timestam
             - start_date_last_week (pd.Timestamp): The start date of the last week.
             - end_date_last_week (pd.Timestamp): The end date of the last week.
     """
+
     # Use current date
     end_date = pd.to_datetime("today")
 
@@ -39,21 +42,44 @@ def calculate_weeks(df: pd.DataFrame) -> Tuple[pd.Series, pd.Series, pd.Timestam
 
     # Create masks for the current week and last week
     mask_this_week = (df["Fecha"] >= start_date) & (df["Fecha"] <= end_date)
-    mask_last_week = (df["Fecha"] >= start_date_last_week) & (df["Fecha"] <= end_date_last_week)
+    mask_last_week = (df["Fecha"] >= start_date_last_week) & (
+        df["Fecha"] <= end_date_last_week
+    )
 
-    return mask_this_week, mask_last_week, start_date, end_date, start_date_last_week, end_date_last_week
-
+    return (
+        mask_this_week,
+        mask_last_week,
+        start_date,
+        end_date,
+        start_date_last_week,
+        end_date_last_week,
+    )
 
 
 # Main functions
-
 def calculate_current_and_previous_week_sales(sales_df: pd.DataFrame) -> Dict[str, Any]:
     """
-    Task 1.a: Bar Chart: Visualize the total sales for the current week and the previous week using a bar chart.
+    Calculates total sales for the current week and the previous week.
+
+    The function uses the data from the input dataframe to calculate the total sales
+    for the current week and the previous week, then prepares the data for visualization
+    in a bar chart.
+
+    Args:
+        sales_df (pd.DataFrame): The input dataframe, containing the sales data.
+
+    Returns
+        dict:
+            A dictionary containing two keys: 'data' and 'title'.
+            'data' holds a list of dictionaries with sales data for the current and previous weeks.
+            'title' is a string for the title of the chart with date range information.
     """
+
     # Filter out rows where 'Ventas' is 0
     sales_df = sales_df[sales_df["Ventas"] != 0]
 
+    # Use calculate_weeks() function to get masks for current and previous week,
+    # and their start and end dates
     (
         mask_this_week,
         mask_last_week,
@@ -63,36 +89,48 @@ def calculate_current_and_previous_week_sales(sales_df: pd.DataFrame) -> Dict[st
         end_date_last_week,
     ) = calculate_weeks(sales_df)
 
-    # Calculate the total sales for each week
+    # Calculate the total sales for each week using the boolean masks
     sales_this_week = sales_df.loc[mask_this_week, "Ventas"].sum()
     sales_last_week = sales_df.loc[mask_last_week, "Ventas"].sum()
 
-    # Define date format
+    # Define date format for the chart
     date_format = "%d/%m/%Y"
 
-    # Prepare data for bar plot
+    # Prepare data for bar plot, including week labels and sales data
     data: List[Dict[str, Any]] = [
         {
-            "Semana": f"Semana Pasada \n {start_date_last_week.strftime(date_format)} - {end_date_last_week.strftime(date_format)}",
+            "Semana": f"Previous week \n {start_date_last_week.strftime(date_format)} - {end_date_last_week.strftime(date_format)}",
             "Ventas": sales_last_week,
         },
         {
-            "Semana": f"Semana Actual \n {start_date.strftime(date_format)} - {end_date.strftime(date_format)}",
+            "Semana": f"Current week \n {start_date.strftime(date_format)} - {end_date.strftime(date_format)}",
             "Ventas": sales_this_week,
         },
     ]
 
-    # Prepare title with date range information
-    title = f"Ventas totales hasta {end_date.strftime(date_format)}"
+    # Prepare title with date range information for the chart
+    title = f"Total sales up to {end_date.strftime(date_format)}"
 
     return {"data": data, "title": title}
 
 
-def calculate_data_indicators(df):
+def calculate_data_indicators(df: pd.DataFrame) -> List[Dict[str, Any]]:
     """
-    Task 1.b: Indicators: Visualize the total sales for the current week using indicators.
+    Calculate and visualize the total sales for the current week using indicators.
+
+    The function preprocesses the input dataframe, replaces sales of zero by the
+    predicted sales on future dates, calculates the sales and predictions per product
+    for the current week, and prepares the data for visualization.
+
+    Args:
+        df (pd.DataFrame): The input dataframe, which should include 'Fecha', 'Ventas',
+                           'Prediccion', and 'Producto' columns. 'Fecha' should be of datetime type.
+
+    Returns:
+        list: A list of dictionaries, each containing the data for one indicator.
     """
-    # Preprocessing
+
+    # Convert 'Fecha' column to datetime type
     df["Fecha"] = pd.to_datetime(df["Fecha"])
 
     # Replace the sales of 0 by the prediction on future dates
@@ -130,7 +168,7 @@ def calculate_data_indicators(df):
     for idx, row in sales_comparison.iterrows():
         indicator = {}
         indicator["description"] = row["Producto"]
-        indicator["title"] = "Ventas semanales"
+        indicator["title"] = "Diferente to match prediccion"
         indicator["value"] = (
             row["Ventas Semana Actual"] - row["Prediccion Semana Actual"]
         )
@@ -144,44 +182,72 @@ def calculate_data_indicators(df):
                 "color"
             ] = "success"  # Green if actual sales are equal to or greater than predictions
         data_indicator.append(indicator)
-
     return data_indicator
 
 
-def calculate_sales_percentage_by_region(sales_df: pd.DataFrame) -> list:
+def calculate_sales_percentage_by_region(
+    sales_df: pd.DataFrame,
+) -> List[Dict[str, Union[str, float]]]:
     """
-    Task 2: Pie Chart: Visualize the percentage of sales by region.
+    Calculate and visualize the percentage of sales by region as a pie chart.
+
+    This function takes a sales data DataFrame, groups the data by region, and calculates
+    the percentage of total sales for each region. The result is returned as a list of
+    dictionaries suitable for visualization.
 
     Args:
-        sales_df (pd.DataFrame): Dataframe with sales data. It must have 'Región' and 'Ventas' columns.
+        sales_df (pd.DataFrame): The sales data DataFrame. It should have 'Región' and 'Ventas' columns.
 
     Returns:
-        list: A list of dictionaries where each dictionary represents a region
-              and its corresponding sales percentage.
+        list: A list of dictionaries, where each dictionary has two keys: 'Región' representing
+              the region name, and 'Percentage' representing the percentage of total sales
+              for that region.
     """
-    # Calculate the total sales by region
+    # Group the sales data by region and calculate the total sales for each region
     sales_by_region = sales_df.groupby("Región")["Ventas"].sum().reset_index()
 
-    # Calculate total sales
+    # Calculate the total sales across all regions
     total_sales = sales_df["Ventas"].sum()
 
-    # Calculate the percentage for each region
+    # Calculate the percentage of total sales for each region and add it to the DataFrame as a new column
     sales_by_region["Percentage"] = (
         sales_by_region["Ventas"] / total_sales * 100
     ).round(3)
 
-    # Only return the region and the percentage
+    # Convert the DataFrame to a list of dictionaries, including only the region and the percentage
+    # Each dictionary corresponds to a data entry for visualization
     return sales_by_region[["Región", "Percentage"]].to_dict("records")
 
 
-def calculate_sales_prediction(sales_df: pd.DataFrame) -> dict:
-    # Use a boolean mask to replace 'Ventas' values with 'Prediccion' values where 'Ventas' is 0
+def calculate_sales_prediction(
+    sales_df: pd.DataFrame,
+) -> Dict[str, Union[List[Dict], int]]:
+    """
+    Calculate sales predictions based on the provided DataFrame.
+
+    This function replaces zero 'Ventas' values with corresponding 'Prediccion' values,
+    reshapes the DataFrame to map each product to a column, fills any null values with 0,
+    and finally computes the number of predicted dates by finding the difference in
+    records between the current date and the latest date in the data.
+
+    Args:
+        sales_df (pd.DataFrame): The input sales DataFrame. It should contain 'Ventas',
+                                 'Prediccion', 'Fecha', and 'Producto' columns.
+
+    Returns:
+        dict: A dictionary containing two keys: 'data' (a list of dictionaries where each
+              dictionary represents sales data for a specific date) and 'num_predicted_dates'
+              (an integer representing the number of predicted dates).
+    """
+
+    # Replace 'Ventas' values with 'Prediccion' values where 'Ventas' is 0
     mask_zero_before = sales_df["Ventas"] == 0.0
     sales_df.loc[mask_zero_before, "Ventas"] = sales_df.loc[
         mask_zero_before, "Prediccion"
     ]
 
-    # Reshape the dataframe so that each product is a column, and fill any null values with 0s
+    # Pivot the DataFrame using 'Fecha' as index, 'Producto' as columns and 'Ventas' as values,
+    # fill null values with 0 and convert to int
     sales_df_pivot = (
         sales_df.pivot_table(
             index="Fecha", columns="Producto", values="Ventas", aggfunc="sum"
@@ -190,55 +256,63 @@ def calculate_sales_prediction(sales_df: pd.DataFrame) -> dict:
         .astype(int)
     )
 
-    # Convert the reshaped dataframe to a list of dictionaries
+    # Convert the reshaped DataFrame to a list of dictionaries
     sales_list = [
         {"date": k.to_pydatetime().date(), **v}
         for k, v in sales_df_pivot.to_dict("index").items()
     ]
 
-    # Calculate the difference in points (number of records) between the current date and the latest date in data
+    # Define the current date
     current_date = datetime.date.today()
+
+    # Get the most recent past date in the sales list
     nearest_past_date = max(
         date for date in [item["date"] for item in sales_list] if date <= current_date
     )
 
+    # Compute the number of predicted dates by calculating the difference
+    # in records between the current date and the latest date in the data
     try:
         nearest_past_date_index = next(
             i for i, item in enumerate(sales_list) if item["date"] == nearest_past_date
         )
         num_predicted_dates = len(sales_list) - nearest_past_date_index - 1
     except StopIteration:
-        num_predicted_dates = 0  # Default value if no date found in sales_list
+        num_predicted_dates = 0  # Default to 0 if no date found in sales_list
 
+    # Return a dictionary containing the sales list and the number of predicted dates
     return {"data": sales_list, "num_predicted_dates": num_predicted_dates}
 
 
 def calculate_sales_per_month(sales_df: pd.DataFrame) -> pd.DataFrame:
     """
-    Task 4: Line Chart: Visualize the evolution of total annual sales over the months of the year
-    (from January to December) using a line chart. That is, the chart's legend will be the years and the 'x' axis
-    will be the names of the months.
+    Calculate total sales per month for each year.
+
+    This function transforms the input DataFrame to a format where each column represents a year,
+    each row represents a month, and cell values represent total sales for the corresponding year and month.
+    This transformation facilitates the visualization of annual sales over the months of the year.
 
     Args:
-        sales_df (pd.DataFrame): Dataframe with sales data. It must have 'Fecha' and 'Ventas' columns.
+        sales_df (pd.DataFrame): The input sales DataFrame. It should contain 'Fecha' and 'Ventas' columns.
 
     Returns:
-        pd.DataFrame: A pivot dataframe that represents total sales per month for each year.
+        pd.DataFrame: A pivot DataFrame where index is 'Month', columns are 'Year',
+                      and cell values are the total sales for the corresponding month and year.
     """
-    # Ensure that 'Fecha' is datetime
+    # Ensure 'Fecha' is of datetime type
     sales_df["Fecha"] = pd.to_datetime(sales_df["Fecha"])
 
     # Extract year and month from 'Fecha'
     sales_df["Year"] = sales_df["Fecha"].dt.year
     sales_df["Month"] = sales_df["Fecha"].dt.month_name()
 
-    # Group by year and month, sum the sales
+    # Group data by year and month, calculate total sales
     sales_per_month = sales_df.groupby(["Year", "Month"])["Ventas"].sum().reset_index()
 
-    # Create a pivot table
+    # Pivot the DataFrame: months as index, years as columns, and sales as values
     pivot_sales = sales_per_month.pivot(index="Month", columns="Year", values="Ventas")
 
-    # Sort the index to make sure months are in correct order
+    # Define a list for the correct month order
     month_order = [
         "January",
         "February",
@@ -253,6 +327,8 @@ def calculate_sales_per_month(sales_df: pd.DataFrame) -> pd.DataFrame:
         "November",
         "December",
     ]
+
+    # Reindex the pivot DataFrame to get months in the correct order
     pivot_sales = pivot_sales.reindex(month_order)
 
     # Replace NaN values with 0
@@ -264,7 +340,7 @@ def calculate_sales_per_month(sales_df: pd.DataFrame) -> pd.DataFrame:
     # Drop the columns that are greater than the current year
     pivot_sales = pivot_sales.loc[:, pivot_sales.columns <= current_year]
 
-    # Reset the index to move "Month" from index to a column
+    # Reset the index to move 'Month' from index to a column
     pivot_sales = pivot_sales.reset_index()
 
     # Convert all column names to strings
