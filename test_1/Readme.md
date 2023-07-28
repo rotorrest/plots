@@ -51,7 +51,7 @@ WORKSPACE_ID=<Your_Workspace_ID>`
 Then, you can run the script with the following command:
 
 ```Bash
-python3 main.py` 
+python3 main.py
 ```
 The script will generate dummy sales data, calculate various statistics, and plot them on the Shimoku board.
 
