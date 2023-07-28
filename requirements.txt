@@ -1,0 +1,4 @@
+black==23.7.0
+pandas==1.5.3
+python-dotenv==1.0.0
+shimoku-api-python==1.0
