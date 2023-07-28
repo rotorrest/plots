@@ -1,5 +1,5 @@
 
-# Project Title
+# Shimoku Plots
 
 Welcome to our project! The repository is organized as follows:
 
