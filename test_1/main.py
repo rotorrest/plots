@@ -10,16 +10,18 @@ from utils import (
     calculate_current_and_previous_week_sales,
     calculate_sales_prediction,
     calculate_data_indicators,
+    calculate_sale_by_region,
 )
 
 # Load environment variables
 load_dotenv()
 
-# Generate dummmy sales data
+# # Generate dummmy sales data
 sales_df = generar_datos_ventas(1000)
 sales_df = sales_df.fillna(0)
+sales_df.to_csv("sales.csv", index=False)
 
-# Initiate Shimoku API
+# # Initiate Shimoku API
 access_token = getenv("SHIMOKU_TOKEN")
 universe_id: str = getenv("UNIVERSE_ID")
 workspace_id: str = getenv("WORKSPACE_ID")
@@ -120,3 +122,69 @@ s.plt.stacked_bar(
     title="Evolution of Total Annual Sales Over the Months of the Year",
     order=1,
 )
+
+# Non guided tasks
+data = calculate_sale_by_region(sales_df.copy())
+s.set_menu_path("Test-v1", "Filter by Region")
+
+s.plt.set_tabs_index(('Tabs', 'Region 1'), order=0)
+s.plt.stacked_bar(
+        x='date',
+        order=0,
+        data=data["Región 1"],
+        option_modifications={
+            'dataZoom': {
+                'show': True
+                }, 
+                'toolbox': {
+                    'show': True
+                    }
+        },
+    )
+
+s.plt.change_current_tab('Region 2')
+s.plt.stacked_bar(
+        x='date',
+        order=0,
+        data=data["Región 2"],
+        option_modifications={
+            'dataZoom': {
+                'show': True
+                }, 
+                'toolbox': {
+                    'show': True
+                    }
+        },
+    )
+
+s.plt.change_current_tab('Region 3')
+s.plt.stacked_bar(
+        x='date',
+        order=0,
+        data=data["Región 3"],
+        option_modifications={
+            'dataZoom': {
+                'show': True
+                }, 
+                'toolbox': {
+                    'show': True
+                    }
+        },
+    )
+
+s.plt.change_current_tab('Region 4')
+s.plt.stacked_bar(
+        x='date',
+        order=0,
+        data=data["Región 4"],
+        option_modifications={
+            'dataZoom': {
+                'show': True
+                }, 
+                'toolbox': {
+                    'show': True
+                    }
+        },
+    )
+
+s.plt.pop_out_of_tabs_group()

@@ -1,5 +1,6 @@
 import pandas as pd
 import datetime
+from collections import defaultdict
 
 from typing import Dict, Any, List, Union, Tuple
 
@@ -347,3 +348,65 @@ def calculate_sales_per_month(sales_df: pd.DataFrame) -> pd.DataFrame:
     pivot_sales.columns = pivot_sales.columns.astype(str)
 
     return pivot_sales
+
+def calculate_sale_by_region(df):
+    """
+    Process the dataframe by region, filtering out future dates and storing the sales data.
+
+    Args:
+        df (pandas.DataFrame): Input dataframe containing sales data.
+
+    Returns:
+        list: List of dictionaries containing the processed sales data for each date.
+    """
+
+    data = []
+
+    # Unique products in the dataframe
+    unique_products = df['Producto'].unique()
+
+    # Group the dataframe by region
+    grouped_df = df.groupby('Región')
+
+    # Get the current date
+    current_date = datetime.date.today()
+
+    region_data = {}
+
+    # Iterate over the groups
+    for region, group in grouped_df:
+        # Iterate over the rows in the group
+        for index, row in group.iterrows():
+            date = row['Fecha'].strftime('%Y-%m-%d')
+            ventas = float(row['Ventas'])
+
+            # Check if the date is valid (before or equal to the current date)
+            if datetime.datetime.strptime(date, '%Y-%m-%d').date() <= current_date:
+                # Check if the data for the current date already exists in 'data' list
+                existing_data = next((d for d in data if d['date'] == date), None)
+
+                if existing_data:
+                    existing_data[row['Producto']] = ventas
+                else:
+                    product_data = {'date': datetime.datetime.strptime(date, '%Y-%m-%d').date()}
+                    for prod in unique_products:
+                        product_data[prod] = 0 if prod != row['Producto'] else ventas
+                    data.append(product_data)
+
+        # Assign the region's data to the dictionary
+        region_data[region] = data
+
+    for i in region_data:
+        # Create a dictionary to store the sum of sales for each product per date
+        sum_sales_by_date = defaultdict(lambda: defaultdict(float))
+
+        # Iterate through the data and sum the sales for each product per date
+        for record in region_data[i]:
+            date = record['date']
+            for product, sales in record.items():
+                if product != 'date':
+                    sum_sales_by_date[date][product] += sales
+
+        region_data[i] = [{'date': date, **sales_data} for date, sales_data in sum_sales_by_date.items()]
+
+    return region_data
