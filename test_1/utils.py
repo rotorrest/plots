@@ -446,6 +446,8 @@ def calculate_this_last_week_sales_vs_prediction(df):
     and 'Prediccion' for each combination. It then calculates the percentage difference between sales and 
     prediction for each region and product for both this week and last week. The result is returned in a 
     structure
+    """
+
     # Applying the function to get the masks and dates
     df["Fecha"] = pd.to_datetime(df["Fecha"])
 
