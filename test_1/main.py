@@ -149,149 +149,58 @@ last_week_end_date = this_last_week_sales_vs_prediction["End Date Last Week"].st
 )
 
 
+# Create a list of region names
+regions = list(this_last_week_sales_vs_prediction.keys())
+# Remove non region names
+regions.remove("Start Date")
+regions.remove("End Date")
+regions.remove("Start Date Last Week")
+regions.remove("End Date Last Week")
+regions.sort()
+
 s.set_menu_path("Test-v1", "Filter by Region")
 
-s.plt.set_tabs_index(("Tabs", "Region 1"), order=0)
+# Loop through each region
+for region_name in regions:
+    # Set menu path and tabs index
+    s.plt.set_tabs_index(("Tabs", region_name), order=0)
 
-percentage_value = this_last_week_sales_vs_prediction["Región 1"]["This week"][
-    "Percentage"
-]
+    # Get percentage values
+    this_week_percentage = this_last_week_sales_vs_prediction[region_name]["This week"][
+        "Percentage"
+    ]
+    last_week_percentage = this_last_week_sales_vs_prediction[region_name]["Last week"][
+        "Percentage"
+    ]
 
-s.plt.gauge_indicator(
-    value=percentage_value,
-    order=0,
-    rows_size=1,
-    cols_size=6,
-    title="Last week sales vs prediction",
-    description=f"Sales from {this_week_start_date} to {this_week_end_date}",
-    color="success" if percentage_value >= 100 else "error",
-)
+    # Plot gauge indicators
+    s.plt.gauge_indicator(
+        value=this_week_percentage,
+        order=0,
+        rows_size=1,
+        cols_size=6,
+        title="Last week sales vs prediction",
+        description=f"Sales from {this_week_start_date} to {this_week_end_date}",
+        color="success" if this_week_percentage >= 100 else "error",
+    )
 
-percentage_value = this_last_week_sales_vs_prediction["Región 1"]["Last week"][
-    "Percentage"
-]
+    s.plt.gauge_indicator(
+        value=last_week_percentage,
+        order=2,
+        rows_size=1,
+        cols_size=6,
+        title="Last week sales vs prediction",
+        description=f"Sales from {last_week_start_date} to {last_week_end_date}",
+        color="success" if last_week_percentage >= 100 else "error",
+    )
 
-s.plt.gauge_indicator(
-    value=percentage_value,
-    order=2,
-    rows_size=1,
-    cols_size=6,
-    title="Last week sales vs prediction",
-    description=f"Sales from {last_week_start_date} to {last_week_end_date}",
-    color="success" if percentage_value >= 100 else "error",
-)
+    # Plot stacked bar chart
+    s.plt.stacked_bar(
+        x="date",
+        order=6,
+        data=data[region_name],
+        option_modifications={"dataZoom": {"show": True}, "toolbox": {"show": True}},
+    )
 
-
-s.plt.stacked_bar(
-    x="date",
-    order=6,
-    data=data["Región 1"],
-    option_modifications={"dataZoom": {"show": True}, "toolbox": {"show": True}},
-)
-
-s.plt.change_current_tab("Region 2")
-
-percentage_value = this_last_week_sales_vs_prediction["Región 2"]["This week"][
-    "Percentage"
-]
-s.plt.gauge_indicator(
-    value=percentage_value,
-    order=0,
-    rows_size=1,
-    cols_size=6,
-    title="Last week sales vs prediction",
-    description=f"Sales from {this_week_start_date} to {this_week_end_date}",
-    color="success" if percentage_value >= 100 else "error",
-)
-
-percentage_value = this_last_week_sales_vs_prediction["Región 2"]["Last week"][
-    "Percentage"
-]
-s.plt.gauge_indicator(
-    value=percentage_value,
-    order=2,
-    rows_size=1,
-    cols_size=6,
-    title="Last week sales vs prediction",
-    description=f"Sales from {last_week_start_date} to {last_week_end_date}",
-    color="success" if percentage_value >= 100 else "error",
-)
-
-s.plt.stacked_bar(
-    x="date",
-    order=6,
-    data=data["Región 2"],
-    option_modifications={"dataZoom": {"show": True}, "toolbox": {"show": True}},
-)
-
-
-s.plt.change_current_tab("Region 3")
-percentage_value = this_last_week_sales_vs_prediction["Región 3"]["This week"][
-    "Percentage"
-]
-s.plt.gauge_indicator(
-    value=percentage_value,
-    order=0,
-    rows_size=1,
-    cols_size=6,
-    title="Last week sales vs prediction",
-    description=f"Sales from {this_week_start_date} to {this_week_end_date}",
-    color="success" if percentage_value >= 100 else "error",
-)
-
-percentage_value = this_last_week_sales_vs_prediction["Región 3"]["Last week"][
-    "Percentage"
-]
-s.plt.gauge_indicator(
-    value=percentage_value,
-    order=2,
-    rows_size=1,
-    cols_size=6,
-    title="Last week sales vs prediction",
-    description=f"Sales from {last_week_start_date} to {last_week_end_date}",
-    color="success" if percentage_value >= 100 else "error",
-)
-
-
-s.plt.stacked_bar(
-    x="date",
-    order=6,
-    data=data["Región 3"],
-    option_modifications={"dataZoom": {"show": True}, "toolbox": {"show": True}},
-)
-
-s.plt.change_current_tab("Region 4")
-percentage_value = this_last_week_sales_vs_prediction["Región 4"]["This week"][
-    "Percentage"
-]
-s.plt.gauge_indicator(
-    value=percentage_value,
-    order=0,
-    rows_size=1,
-    cols_size=6,
-    title="Last week sales vs prediction",
-    description=f"Sales from {this_week_start_date} to {this_week_end_date}",
-    color="success" if percentage_value >= 100 else "error",
-)
-
-percentage_value = this_last_week_sales_vs_prediction["Región 4"]["Last week"][
-    "Percentage"
-]
-s.plt.gauge_indicator(
-    value=percentage_value,
-    order=2,
-    rows_size=1,
-    cols_size=6,
-    title="Last week sales vs prediction",
-    description=f"Sales from {last_week_start_date} to {last_week_end_date}",
-    color="success" if percentage_value >= 100 else "error",
-)
-
-s.plt.stacked_bar(
-    x="date",
-    order=6,
-    data=data["Región 4"],
-    option_modifications={"dataZoom": {"show": True}, "toolbox": {"show": True}},
-)
-
+# Pop out of tabs group
 s.plt.pop_out_of_tabs_group()
