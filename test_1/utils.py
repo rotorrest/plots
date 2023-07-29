@@ -4,6 +4,7 @@ from collections import defaultdict
 
 from typing import Dict, Any, List, Union, Tuple
 
+
 # Auxiliary function
 def calculate_weeks(
     df: pd.DataFrame,
@@ -349,6 +350,7 @@ def calculate_sales_per_month(sales_df: pd.DataFrame) -> pd.DataFrame:
 
     return pivot_sales
 
+
 def calculate_sale_by_region(df):
     """
     Process the dataframe by region, filtering out future dates and storing the sales data.
@@ -363,10 +365,10 @@ def calculate_sale_by_region(df):
     data = []
 
     # Unique products in the dataframe
-    unique_products = df['Producto'].unique()
+    unique_products = df["Producto"].unique()
 
     # Group the dataframe by region
-    grouped_df = df.groupby('Región')
+    grouped_df = df.groupby("Región")
 
     # Get the current date
     current_date = datetime.date.today()
@@ -377,20 +379,22 @@ def calculate_sale_by_region(df):
     for region, group in grouped_df:
         # Iterate over the rows in the group
         for index, row in group.iterrows():
-            date = row['Fecha'].strftime('%Y-%m-%d')
-            ventas = float(row['Ventas'])
+            date = row["Fecha"].strftime("%Y-%m-%d")
+            ventas = float(row["Ventas"])
 
             # Check if the date is valid (before or equal to the current date)
-            if datetime.datetime.strptime(date, '%Y-%m-%d').date() <= current_date:
+            if datetime.datetime.strptime(date, "%Y-%m-%d").date() <= current_date:
                 # Check if the data for the current date already exists in 'data' list
-                existing_data = next((d for d in data if d['date'] == date), None)
+                existing_data = next((d for d in data if d["date"] == date), None)
 
                 if existing_data:
-                    existing_data[row['Producto']] = ventas
+                    existing_data[row["Producto"]] = ventas
                 else:
-                    product_data = {'date': datetime.datetime.strptime(date, '%Y-%m-%d').date()}
+                    product_data = {
+                        "date": datetime.datetime.strptime(date, "%Y-%m-%d").date()
+                    }
                     for prod in unique_products:
-                        product_data[prod] = 0 if prod != row['Producto'] else ventas
+                        product_data[prod] = 0 if prod != row["Producto"] else ventas
                     data.append(product_data)
 
         # Assign the region's data to the dictionary
@@ -402,14 +406,18 @@ def calculate_sale_by_region(df):
 
         # Iterate through the data and sum the sales for each product per date
         for record in region_data[i]:
-            date = record['date']
+            date = record["date"]
             for product, sales in record.items():
-                if product != 'date':
+                if product != "date":
                     sum_sales_by_date[date][product] += sales
 
-        region_data[i] = [{'date': date, **sales_data} for date, sales_data in sum_sales_by_date.items()]
+        region_data[i] = [
+            {"date": date, **sales_data}
+            for date, sales_data in sum_sales_by_date.items()
+        ]
 
     return region_data
+
 
 def calculate_this_last_week_sales_vs_prediction(df):
     """
@@ -417,10 +425,10 @@ def calculate_this_last_week_sales_vs_prediction(df):
 
     Parameters:
         df (pandas.DataFrame): The input DataFrame containing sales and prediction data.
-        
+
     Returns:
-        dict: A dictionary containing aggregated sales and prediction data for each region and product 
-              for this week and last week, along with their percentage difference. The dictionary is 
+        dict: A dictionary containing aggregated sales and prediction data for each region and product
+              for this week and last week, along with their percentage difference. The dictionary is
               structured as follows:
               {
                 region: {
@@ -441,62 +449,89 @@ def calculate_this_last_week_sales_vs_prediction(df):
                 'End Date Last Week': End date of last week (datetime)
               }
 
-    This function takes a DataFrame containing sales and prediction data, filters it for the current week 
-    and the previous week, groups the data by 'Región' and 'Producto', and calculates the sum of 'Ventas' 
-    and 'Prediccion' for each combination. It then calculates the percentage difference between sales and 
-    prediction for each region and product for both this week and last week. The result is returned in a 
+    This function takes a DataFrame containing sales and prediction data, filters it for the current week
+    and the previous week, groups the data by 'Región' and 'Producto', and calculates the sum of 'Ventas'
+    and 'Prediccion' for each combination. It then calculates the percentage difference between sales and
+    prediction for each region and product for both this week and last week. The result is returned in a
     structure
     """
 
     # Applying the function to get the masks and dates
     df["Fecha"] = pd.to_datetime(df["Fecha"])
 
-    mask_this_week, mask_last_week, start_date, end_date, start_date_last_week, end_date_last_week = calculate_weeks(df)
+    (
+        mask_this_week,
+        mask_last_week,
+        start_date,
+        end_date,
+        start_date_last_week,
+        end_date_last_week,
+    ) = calculate_weeks(df)
 
     # Filter the data for this week and last week
     data_this_week = df[mask_this_week]
     data_last_week = df[mask_last_week]
 
     # Group the data by 'Región' and 'Producto' and calculate the sum of 'Ventas' and 'Prediccion' for each combination
-    ventas_this_week_by_region = data_this_week.groupby(['Región', 'Producto'])['Ventas'].sum()
-    prediccion_this_week_by_region = data_this_week.groupby(['Región', 'Producto'])['Prediccion'].sum()
-    ventas_last_week_by_region = data_last_week.groupby(['Región', 'Producto'])['Ventas'].sum()
-    prediccion_last_week_by_region = data_last_week.groupby(['Región', 'Producto'])['Prediccion'].sum()
+    ventas_this_week_by_region = data_this_week.groupby(["Región", "Producto"])[
+        "Ventas"
+    ].sum()
+    prediccion_this_week_by_region = data_this_week.groupby(["Región", "Producto"])[
+        "Prediccion"
+    ].sum()
+    ventas_last_week_by_region = data_last_week.groupby(["Región", "Producto"])[
+        "Ventas"
+    ].sum()
+    prediccion_last_week_by_region = data_last_week.groupby(["Región", "Producto"])[
+        "Prediccion"
+    ].sum()
 
     # Create dictionaries for each week with regions as keys
     this_week_data_by_region = {
         region: {
-            'This week': {
-                'Ventas': ventas_this_week_by_region.get((region, 'Producto A'), 0),
-                'Prediccion': prediccion_this_week_by_region.get((region, 'Producto A'), 0),
-                'Percentage': 0.0  # Initialize percentage to 0, we'll calculate it later
+            "This week": {
+                "Ventas": ventas_this_week_by_region.get((region, "Producto A"), 0),
+                "Prediccion": prediccion_this_week_by_region.get(
+                    (region, "Producto A"), 0
+                ),
+                "Percentage": 0.0,  # Initialize percentage to 0, we'll calculate it later
             },
-            'Last week': {
-                'Ventas': ventas_last_week_by_region.get((region, 'Producto A'), 0),
-                'Prediccion': prediccion_last_week_by_region.get((region, 'Producto A'), 0),
-                'Percentage': 0.0  # Initialize percentage to 0, we'll calculate it later
-            }
+            "Last week": {
+                "Ventas": ventas_last_week_by_region.get((region, "Producto A"), 0),
+                "Prediccion": prediccion_last_week_by_region.get(
+                    (region, "Producto A"), 0
+                ),
+                "Percentage": 0.0,  # Initialize percentage to 0, we'll calculate it later
+            },
         }
-        for region in df['Región'].unique()
+        for region in df["Región"].unique()
     }
 
     # Calculate percentage for each region's data for this week and last week
     for region in this_week_data_by_region:
-        ventas_this_week = this_week_data_by_region[region]['This week']['Ventas']
-        prediccion_this_week = this_week_data_by_region[region]['This week']['Prediccion']
+        ventas_this_week = this_week_data_by_region[region]["This week"]["Ventas"]
+        prediccion_this_week = this_week_data_by_region[region]["This week"][
+            "Prediccion"
+        ]
         if prediccion_this_week != 0:
             percentage_this_week = (ventas_this_week / prediccion_this_week) * 100
-            this_week_data_by_region[region]['This week']['Percentage'] = round(percentage_this_week, 2)
+            this_week_data_by_region[region]["This week"]["Percentage"] = round(
+                percentage_this_week, 2
+            )
 
-        ventas_last_week = this_week_data_by_region[region]['Last week']['Ventas']
-        prediccion_last_week = this_week_data_by_region[region]['Last week']['Prediccion']
+        ventas_last_week = this_week_data_by_region[region]["Last week"]["Ventas"]
+        prediccion_last_week = this_week_data_by_region[region]["Last week"][
+            "Prediccion"
+        ]
         if prediccion_last_week != 0:
             percentage_last_week = (ventas_last_week / prediccion_last_week) * 100
-            this_week_data_by_region[region]['Last week']['Percentage'] = round(percentage_last_week, 2)
+            this_week_data_by_region[region]["Last week"]["Percentage"] = round(
+                percentage_last_week, 2
+            )
 
-    this_week_data_by_region['Start Date'] = start_date
-    this_week_data_by_region['End Date'] = end_date
-    this_week_data_by_region['Start Date Last Week'] = start_date_last_week
-    this_week_data_by_region['End Date Last Week'] = end_date_last_week
+    this_week_data_by_region["Start Date"] = start_date
+    this_week_data_by_region["End Date"] = end_date
+    this_week_data_by_region["Start Date Last Week"] = start_date_last_week
+    this_week_data_by_region["End Date Last Week"] = end_date_last_week
 
     return this_week_data_by_region

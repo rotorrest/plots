@@ -1,6 +1,7 @@
 import pandas as pd
 import datetime as dt
 
+
 def generate_plot_data(df):
     # Convertir la columna 'Fecha' al tipo de dato datetime
     df["Fecha"] = pd.to_datetime(df["Fecha"])

@@ -5,8 +5,8 @@ from os import getenv
 
 from prueba_acceso import generar_datos_ventas
 from utils import (
-    generate_plot_data, 
-    totales_diarios, 
+    generate_plot_data,
+    totales_diarios,
     total_semanal,
 )
 
