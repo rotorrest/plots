@@ -18,11 +18,11 @@ from utils import (
 # Load environment variables
 load_dotenv()
 
-# # # Generate dummmy sales data
+# Generate dummmy sales data
 sales_df = generar_datos_ventas(1000)
 sales_df = sales_df.fillna(0)
 
-# # Initiate Shimoku API
+# Initiate Shimoku API
 access_token = getenv("SHIMOKU_TOKEN")
 universe_id: str = getenv("UNIVERSE_ID")
 workspace_id: str = getenv("WORKSPACE_ID")
@@ -103,7 +103,7 @@ s.plt.pie(
 
 
 # Task 3
-s.set_menu_path("Test-v1", "Sales Prediction")
+s.set_menu_path("Test-v1", "Sales Prediction 1")
 s.plt.predictive_line(
     data=sales_prediction["data"],
     x="date",
@@ -114,6 +114,8 @@ s.plt.predictive_line(
     max_value_mark=len(sales_prediction["data"]) - 1,
     rows_size=3,
     cols_size=12,
+    option_modifications={"dataZoom": {"show": True}, "toolbox": {"show": True}},
+
 )
 
 # Task 4
