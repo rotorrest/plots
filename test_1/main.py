@@ -270,8 +270,6 @@ s.plt.gauge_indicator(
     color = "success" if percentage_value >= 100 else "error",
 )
 
-s.plt.html(html='<h1>Test</h1>', order=4)
-
 s.plt.stacked_bar(
         x='date',
         order=6,
