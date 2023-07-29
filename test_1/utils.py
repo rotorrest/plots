@@ -412,7 +412,40 @@ def calculate_sale_by_region(df):
     return region_data
 
 def calculate_this_last_week_sales_vs_prediction(df):
+    """
+    Calculate sales and prediction data for this week and last week and their percentage difference.
+
+    Parameters:
+        df (pandas.DataFrame): The input DataFrame containing sales and prediction data.
         
+    Returns:
+        dict: A dictionary containing aggregated sales and prediction data for each region and product 
+              for this week and last week, along with their percentage difference. The dictionary is 
+              structured as follows:
+              {
+                region: {
+                    'This week': {
+                        'Ventas': Total sales for this week,
+                        'Prediccion': Total prediction for this week,
+                        'Percentage': Percentage difference between sales and prediction for this week
+                    },
+                    'Last week': {
+                        'Ventas': Total sales for last week,
+                        'Prediccion': Total prediction for last week,
+                        'Percentage': Percentage difference between sales and prediction for last week
+                    }
+                },
+                'Start Date': Start date of this week (datetime),
+                'End Date': End date of this week (datetime),
+                'Start Date Last Week': Start date of last week (datetime),
+                'End Date Last Week': End date of last week (datetime)
+              }
+
+    This function takes a DataFrame containing sales and prediction data, filters it for the current week 
+    and the previous week, groups the data by 'Región' and 'Producto', and calculates the sum of 'Ventas' 
+    and 'Prediccion' for each combination. It then calculates the percentage difference between sales and 
+    prediction for each region and product for both this week and last week. The result is returned in a 
+    structure
     # Applying the function to get the masks and dates
     df["Fecha"] = pd.to_datetime(df["Fecha"])
 
