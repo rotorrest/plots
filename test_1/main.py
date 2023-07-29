@@ -2,6 +2,7 @@ import shimoku_api_python as Shimoku
 
 from dotenv import load_dotenv
 from os import getenv
+import pandas as pd 
 
 from prueba_acceso import generar_datos_ventas
 from utils import (
@@ -11,15 +12,15 @@ from utils import (
     calculate_sales_prediction,
     calculate_data_indicators,
     calculate_sale_by_region,
+    calculate_this_last_week_sales_vs_prediction,
 )
 
 # Load environment variables
 load_dotenv()
 
-# # Generate dummmy sales data
+# # # Generate dummmy sales data
 sales_df = generar_datos_ventas(1000)
 sales_df = sales_df.fillna(0)
-sales_df.to_csv("sales.csv", index=False)
 
 # # Initiate Shimoku API
 access_token = getenv("SHIMOKU_TOKEN")
@@ -125,12 +126,45 @@ s.plt.stacked_bar(
 
 # Non guided tasks
 data = calculate_sale_by_region(sales_df.copy())
+this_last_week_sales_vs_prediction = calculate_this_last_week_sales_vs_prediction(sales_df.copy())
+sales_date_float = this_last_week_sales_vs_prediction['Región 1']['This week']['Ventas']
+prediction_date_float = this_last_week_sales_vs_prediction['Región 1']['This week']['Percentage']
+this_week_start_date = this_last_week_sales_vs_prediction["Start Date"].strftime("%d%m%Y")
+this_week_end_date = this_last_week_sales_vs_prediction["End Date"].strftime("%d%m%Y")
+last_week_start_date = this_last_week_sales_vs_prediction["Start Date Last Week"].strftime("%d%m%Y")
+last_week_end_date = this_last_week_sales_vs_prediction["End Date Last Week"].strftime("%d%m%Y")
+
+
 s.set_menu_path("Test-v1", "Filter by Region")
 
 s.plt.set_tabs_index(('Tabs', 'Region 1'), order=0)
+
+percentage_value = this_last_week_sales_vs_prediction['Región 1']['This week']['Percentage']
+
+s.plt.gauge_indicator(
+    value=percentage_value,
+    order=0,
+    rows_size=1, cols_size=6,
+    title="Last week sales vs prediction",
+    description = f"Sales from {this_week_start_date} to {this_week_end_date}",
+    color = "success" if percentage_value >= 100 else "error",
+)
+
+percentage_value = this_last_week_sales_vs_prediction['Región 1']['Last week']['Percentage']
+
+s.plt.gauge_indicator(
+    value=percentage_value,
+    order=2,
+    rows_size=1, cols_size=6,
+    title="Last week sales vs prediction",
+    description = f"Sales from {last_week_start_date} to {last_week_end_date}",
+    color = "success" if percentage_value >= 100 else "error",
+)
+
+
 s.plt.stacked_bar(
         x='date',
-        order=0,
+        order=6,
         data=data["Región 1"],
         option_modifications={
             'dataZoom': {
@@ -143,9 +177,30 @@ s.plt.stacked_bar(
     )
 
 s.plt.change_current_tab('Region 2')
+
+percentage_value = this_last_week_sales_vs_prediction['Región 2']['This week']['Percentage']
+s.plt.gauge_indicator(
+    value=percentage_value,
+    order=0,
+    rows_size=1, cols_size=6,
+    title="Last week sales vs prediction",
+    description = f"Sales from {this_week_start_date} to {this_week_end_date}",
+    color = "success" if percentage_value >= 100 else "error",
+)
+
+percentage_value = this_last_week_sales_vs_prediction['Región 2']['Last week']['Percentage']
+s.plt.gauge_indicator(
+    value=percentage_value,
+    order=2,
+    rows_size=1, cols_size=6,
+    title="Last week sales vs prediction",
+    description = f"Sales from {last_week_start_date} to {last_week_end_date}",
+    color = "success" if percentage_value >= 100 else "error",
+)
+
 s.plt.stacked_bar(
         x='date',
-        order=0,
+        order=6,
         data=data["Región 2"],
         option_modifications={
             'dataZoom': {
@@ -157,10 +212,32 @@ s.plt.stacked_bar(
         },
     )
 
+
 s.plt.change_current_tab('Region 3')
+percentage_value = this_last_week_sales_vs_prediction['Región 3']['This week']['Percentage']
+s.plt.gauge_indicator(
+    value=percentage_value,
+    order=0,
+    rows_size=1, cols_size=6,
+    title="Last week sales vs prediction",
+    description = f"Sales from {this_week_start_date} to {this_week_end_date}",
+    color = "success" if percentage_value >= 100 else "error",
+)
+
+percentage_value = this_last_week_sales_vs_prediction['Región 3']['Last week']['Percentage']
+s.plt.gauge_indicator(
+    value=percentage_value,
+    order=2,
+    rows_size=1, cols_size=6,
+    title="Last week sales vs prediction",
+    description = f"Sales from {last_week_start_date} to {last_week_end_date}",
+    color = "success" if percentage_value >= 100 else "error",
+)
+
+
 s.plt.stacked_bar(
         x='date',
-        order=0,
+        order=6,
         data=data["Región 3"],
         option_modifications={
             'dataZoom': {
@@ -173,9 +250,31 @@ s.plt.stacked_bar(
     )
 
 s.plt.change_current_tab('Region 4')
+percentage_value = this_last_week_sales_vs_prediction['Región 4']['This week']['Percentage']
+s.plt.gauge_indicator(
+    value=percentage_value,
+    order=0,
+    rows_size=1, cols_size=6,
+    title="Last week sales vs prediction",
+    description = f"Sales from {this_week_start_date} to {this_week_end_date}",
+    color = "success" if percentage_value >= 100 else "error",
+)
+
+percentage_value = this_last_week_sales_vs_prediction['Región 4']['Last week']['Percentage']
+s.plt.gauge_indicator(
+    value=percentage_value,
+    order=2,
+    rows_size=1, cols_size=6,
+    title="Last week sales vs prediction",
+    description = f"Sales from {last_week_start_date} to {last_week_end_date}",
+    color = "success" if percentage_value >= 100 else "error",
+)
+
+s.plt.html(html='<h1>Test</h1>', order=4)
+
 s.plt.stacked_bar(
         x='date',
-        order=0,
+        order=6,
         data=data["Región 4"],
         option_modifications={
             'dataZoom': {

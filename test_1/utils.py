@@ -410,3 +410,58 @@ def calculate_sale_by_region(df):
         region_data[i] = [{'date': date, **sales_data} for date, sales_data in sum_sales_by_date.items()]
 
     return region_data
+
+def calculate_this_last_week_sales_vs_prediction(df):
+        
+    # Applying the function to get the masks and dates
+    df["Fecha"] = pd.to_datetime(df["Fecha"])
+
+    mask_this_week, mask_last_week, start_date, end_date, start_date_last_week, end_date_last_week = calculate_weeks(df)
+
+    # Filter the data for this week and last week
+    data_this_week = df[mask_this_week]
+    data_last_week = df[mask_last_week]
+
+    # Group the data by 'Región' and 'Producto' and calculate the sum of 'Ventas' and 'Prediccion' for each combination
+    ventas_this_week_by_region = data_this_week.groupby(['Región', 'Producto'])['Ventas'].sum()
+    prediccion_this_week_by_region = data_this_week.groupby(['Región', 'Producto'])['Prediccion'].sum()
+    ventas_last_week_by_region = data_last_week.groupby(['Región', 'Producto'])['Ventas'].sum()
+    prediccion_last_week_by_region = data_last_week.groupby(['Región', 'Producto'])['Prediccion'].sum()
+
+    # Create dictionaries for each week with regions as keys
+    this_week_data_by_region = {
+        region: {
+            'This week': {
+                'Ventas': ventas_this_week_by_region.get((region, 'Producto A'), 0),
+                'Prediccion': prediccion_this_week_by_region.get((region, 'Producto A'), 0),
+                'Percentage': 0.0  # Initialize percentage to 0, we'll calculate it later
+            },
+            'Last week': {
+                'Ventas': ventas_last_week_by_region.get((region, 'Producto A'), 0),
+                'Prediccion': prediccion_last_week_by_region.get((region, 'Producto A'), 0),
+                'Percentage': 0.0  # Initialize percentage to 0, we'll calculate it later
+            }
+        }
+        for region in df['Región'].unique()
+    }
+
+    # Calculate percentage for each region's data for this week and last week
+    for region in this_week_data_by_region:
+        ventas_this_week = this_week_data_by_region[region]['This week']['Ventas']
+        prediccion_this_week = this_week_data_by_region[region]['This week']['Prediccion']
+        if prediccion_this_week != 0:
+            percentage_this_week = (ventas_this_week / prediccion_this_week) * 100
+            this_week_data_by_region[region]['This week']['Percentage'] = round(percentage_this_week, 2)
+
+        ventas_last_week = this_week_data_by_region[region]['Last week']['Ventas']
+        prediccion_last_week = this_week_data_by_region[region]['Last week']['Prediccion']
+        if prediccion_last_week != 0:
+            percentage_last_week = (ventas_last_week / prediccion_last_week) * 100
+            this_week_data_by_region[region]['Last week']['Percentage'] = round(percentage_last_week, 2)
+
+    this_week_data_by_region['Start Date'] = start_date
+    this_week_data_by_region['End Date'] = end_date
+    this_week_data_by_region['Start Date Last Week'] = start_date_last_week
+    this_week_data_by_region['End Date Last Week'] = end_date_last_week
+
+    return this_week_data_by_region
