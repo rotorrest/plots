@@ -8,11 +8,11 @@ from prueba_acceso import generar_datos_ventas
 from utils import (
     calculate_sales_percentage_by_region,
     calculate_sales_per_month,
-    calculate_current_and_previous_week_sales,
-    calculate_sales_prediction,
+    calculate_sales_by_month,
     calculate_data_indicators,
     calculate_sale_by_region,
     calculate_this_last_week_sales_vs_prediction,
+    calculate_sales_by_day_of_the_week,
 )
 
 # Load environment variables
@@ -37,18 +37,16 @@ s.set_board("Rodrigo Torres")
 # Genearate data
 
 # Task 1.a
-current_and_previous_week_sales = calculate_current_and_previous_week_sales(
-    sales_df.copy()
-)
+sales_by_day_of_the_week = calculate_sales_by_day_of_the_week(sales_df.copy())
 
 # Task 1.b
-data_indicators = calculate_data_indicators(sales_df.copy())
+#data_indicators = calculate_data_indicators(sales_df.copy())
 
 # Task 2
 sales_per_region_percentage = calculate_sales_percentage_by_region(sales_df.copy())
 
 # Task 3
-sales_prediction = calculate_sales_prediction(sales_df.copy())
+sales_per_month_agrupation = calculate_sales_by_month(sales_df.copy())
 
 # Task 4
 sales_per_month = calculate_sales_per_month(sales_df.copy())
@@ -56,36 +54,24 @@ sales_per_month = calculate_sales_per_month(sales_df.copy())
 # Plots
 
 # Task 1
-s.set_menu_path("Test-v1", "Current/Previus Week")
+s.set_menu_path("Test-v1", "Current/Previus week sales")
 
-s.plt.html(
-    html=("<h3>Difference between sales and prediction</h3>"),
-    order=1,
-    rows_size=1,
-    cols_size=12,
-)
-
-# Task 1.b
-s.plt.indicator(
-    data=data_indicators,
-    order=2,
-    rows_size=1,
-    cols_size=12,
-)
-
-s.plt.html(
-    html=(f"<h5>{current_and_previous_week_sales['title']}</h3>"),
-    order=6,
-    rows_size=1,
-    cols_size=12,
-)
+# # Task 1.b
+# s.plt.indicator(
+#     data=data_indicators,
+#     order=2,
+#     rows_size=1,
+#     cols_size=12,
+# )
 
 # Task 1.a
-s.plt.bar(
-    data=current_and_previous_week_sales["data"],
-    order=7,
-    x="Semana",
-    y_axis_name="Ventas",
+s.plt.line(
+    data=sales_by_day_of_the_week["days_data"],
+    x="Day_of_Week",
+    x_axis_name="Day of the week",
+    y_axis_name="Total Sales",
+    title="Comparison of current and last week sales sales and predictions",
+    order=0,
     padding="0,1,0,1",
 )
 
@@ -99,23 +85,19 @@ s.plt.pie(
     title="Percentage of sales by region",
     rows_size=2,
     cols_size=12,
+    padding="0,1,0,1",
 )
 
-
 # Task 3
-s.set_menu_path("Test-v1", "Sales Prediction 1")
-s.plt.predictive_line(
-    data=sales_prediction["data"],
-    x="date",
+s.set_menu_path("Test-v1", "Sales by Month")
+s.plt.line(
+    data=sales_per_month_agrupation,
+    x="Fecha",
     order=0,
-    min_value_mark=len(sales_prediction["data"])
-    - 1
-    - sales_prediction["num_predicted_dates"],
-    max_value_mark=len(sales_prediction["data"]) - 1,
     rows_size=3,
     cols_size=12,
+    title="Total sales of all products by month",
     option_modifications={"dataZoom": {"show": True}, "toolbox": {"show": True}},
-
 )
 
 # Task 4
@@ -126,7 +108,7 @@ s.plt.stacked_bar(
     y=sales_per_month.columns[1:].tolist(),
     x_axis_name="Month of the Year",
     y_axis_name="Total Sales",
-    title="Evolution of Total Annual Sales Over the Months of the Year",
+    title="Monthly sales of all products",
     order=1,
 )
 
