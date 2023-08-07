@@ -195,35 +195,36 @@ def calculate_sales_percentage_by_region(
     # Each dictionary corresponds to a data entry for visualization
     return sales_by_region[["Región", "Percentage"]].to_dict("records")
 
-def calculate_sales_by_month(sales_df: pd.DataFrame) -> List[Dict[str, Union[str, float]]]:
+def calculate_sales_by_month(sales_df: pd.DataFrame) -> Dict[str, Union[List[Dict[str, Union[str, float]]], int]]:
     """
-    Calculate the total sales for each product by month, also its going to considerate predictions.
+    Calculate the total sales for each product by month and consider predictions if available.
 
     Args:
         sales_df (pd.DataFrame): The pandas DataFrame containing sales data.
 
     Returns:
-        List[Dict[str, Union[str, float]]]: A list of dictionaries, each containing
-            'Fecha' (date in 'YYYY-MM' format) and sales data for each product.
+        Dict[str, Union[List[Dict[str, Union[str, float]]], int]]: A dictionary containing two keys:
+            - 'data': A list of dictionaries, each containing 'Fecha' (date in 'YYYY-MM' format)
+                     and sales data for each product.
+            - 'num_predictions': The number of predictions that match actual sales data.
     """
 
-
-    # Step 2: Convert 'Fecha' column to datetime data type
+    # Convert 'Fecha' column to datetime data type
     sales_df["Fecha"] = pd.to_datetime(sales_df["Fecha"])
 
-    # Step 3: Replace 'Ventas' equal to 0 with 'Prediccion' values
+    # Replace 'Ventas' equal to 0 with 'Prediccion' values
     sales_df["Ventas"] = np.where(sales_df["Ventas"] == 0, sales_df["Prediccion"], sales_df["Ventas"])
 
-    # Agrupar los datos por mes y sumar las ventas para cada mes por producto keep the prediction
+    # Aggregate the data by month and product, summing up the sales and predictions
     sales_df = sales_df.groupby([pd.Grouper(key='Fecha', freq='M'), "Producto"]).agg({"Ventas": "sum", "Prediccion": "sum"}).reset_index()
 
-    # number of predictions that match ventas from now
+    # Calculate the number of predictions that match actual sales data
     num_predictions = len(sales_df[sales_df["Ventas"] != sales_df["Prediccion"]])
 
-    # Step 4: Drop the 'Prediccion' column as it is no longer needed
+    # Drop the 'Prediccion' column as it is no longer needed
     sales_df.drop(columns=["Prediccion"], inplace=True)
 
-    # Step 5: Group data by 'Fecha' and create dictionaries for each unique date
+    # Group data by 'Fecha' and create dictionaries for each unique date
     data_list = []
     for fecha, group_data in sales_df.groupby("Fecha"):
         # Create a dictionary for each date
@@ -233,7 +234,7 @@ def calculate_sales_by_month(sales_df: pd.DataFrame) -> List[Dict[str, Union[str
             date_dict[row["Producto"]] = row["Ventas"]
         # Append the dictionary to the data_list
         data_list.append(date_dict)
-        
+
     # Get the current year and month
     current_year = datetime.date.today().year
     current_month = datetime.date.today().month
@@ -241,15 +242,13 @@ def calculate_sales_by_month(sales_df: pd.DataFrame) -> List[Dict[str, Union[str
     # Initialize a counter for future values
     future_values_count = 0
 
-    # Loop through the list of dictionaries
+    # Loop through the list of dictionaries to count future dates
     for item in data_list:
         fecha = item.get('Fecha')
         if fecha.year > current_year or (fecha.year == current_year and fecha.month > current_month):
             future_values_count += 1
 
-
     return {"data": data_list, "num_predictions": future_values_count}
-    
 
 def calculate_sales_per_month(sales_df: pd.DataFrame) -> pd.DataFrame:
     """
