@@ -1,7 +1,8 @@
 import pandas as pd
 import datetime as dt
 
-def calculate_generate_plot_data(df):
+
+def calculate_generate_plot_data(df: pd.DataFrame) -> list:
     """
     Create a dictionary to store the sum of sales for each product per month.
 
@@ -41,7 +42,7 @@ def calculate_generate_plot_data(df):
     return output_data
 
 
-def calculate_monthly_sales(df):
+def calculate_monthly_sales(df: pd.DataFrame) -> list:
     """
     Calculate monthly sales and return the data in a list of dictionaries.
 
@@ -55,20 +56,20 @@ def calculate_monthly_sales(df):
     df["Fecha"] = pd.to_datetime(df["Fecha"])
 
     # Group the data by month and sum the sales for each month
-    monthly_totals = df.groupby(pd.Grouper(key="Fecha", freq="M"))["Ventas"].sum().reset_index()
+    monthly_totals = (
+        df.groupby(pd.Grouper(key="Fecha", freq="M"))["Ventas"].sum().reset_index()
+    )
 
     # Remove records with zero sales for future dates
     today = pd.Timestamp(dt.date.today())
     monthly_totals = monthly_totals[monthly_totals["Fecha"] <= today]
 
-    # Make sure the date is converted to the correct format for the Shimoku API
-    #monthly_totals["Fecha"] = monthly_totals["Fecha"].dt.strftime("%Y-%m-%d")
-
     data = monthly_totals.to_dict("records")
 
     return data
 
-def calculate_cumulative_monthly_sales(df):
+
+def calculate_cumulative_monthly_sales(df: pd.DataFrame) -> list:
     """
     Calculate cumulative monthly sales and return the data in a list of dictionaries.
 
@@ -89,7 +90,11 @@ def calculate_cumulative_monthly_sales(df):
     df_months = df_months[df_months["Ventas"] > 0]
 
     # Group the data by month and sum the sales for each month
-    df_months = df_months.groupby(pd.Grouper(key="Fecha", freq="M")).agg({"Ventas": "sum"}).reset_index()
+    df_months = (
+        df_months.groupby(pd.Grouper(key="Fecha", freq="M"))
+        .agg({"Ventas": "sum"})
+        .reset_index()
+    )
 
     # Calculate the cumulative sales column
     df_months["cumulative"] = df_months["Ventas"].cumsum()
@@ -98,5 +103,8 @@ def calculate_cumulative_monthly_sales(df):
     df_months["Date"] = df_months["Fecha"].dt.strftime("%Y-%m-%d")
 
     # Create the dictionary
-    dict_list = [{"Fecha": row["Date"], "cumulative": row["cumulative"]} for _, row in df_months.iterrows()]
+    dict_list = [
+        {"Fecha": row["Date"], "cumulative": row["cumulative"]}
+        for _, row in df_months.iterrows()
+    ]
     return dict_list

@@ -54,7 +54,7 @@ sales_per_month = calculate_sales_per_month(sales_df.copy())
 # Plots
 
 # Task 1
-s.set_menu_path("Prueba-1", "Weekly Sales Performance 1")
+s.set_menu_path("Prueba-v1", "Weekly Sales Performance 1")
 
 # Task 1.a
 s.plt.line(
@@ -62,7 +62,7 @@ s.plt.line(
     x="Day_of_Week",
     x_axis_name="Day of the week",
     y_axis_name="Total Sales ($)",
-    title="Sales Performance: This Week vs. Last Week and Future Projections",
+    title="Sales Performance: This Week vs. Last Week",
     order=0,
     padding="0,1,0,1",
 )
@@ -87,23 +87,22 @@ s.plt.pie(
     cols_size=12,
     padding="0,1,0,1",
 )
-print(len(sales_per_month_agrupation["data"]))
-print(len(sales_per_month_agrupation["data"])-sales_per_month_agrupation["num_predictions"])
-
 
 
 # Task 3
-s.set_menu_path("Prueba-v1", "Monthly Sales Overview1")
+s.set_menu_path("Prueba-v1", "Monthly Sales Overview")
 s.plt.predictive_line(
     data=sales_per_month_agrupation["data"],
     x="Fecha",
     order=0,
     min_value_mark=len(sales_per_month_agrupation["data"]),
-    max_value_mark=len(sales_per_month_agrupation["data"])-sales_per_month_agrupation["num_predictions"],
+    max_value_mark=len(sales_per_month_agrupation["data"])
+    - sales_per_month_agrupation["num_predictions"],
     rows_size=3,
     cols_size=12,
     title="Total Monthly Sales of all products",
     option_modifications={"dataZoom": {"show": True}, "toolbox": {"show": True}},
+    y_axis_name="Sales ($)",
 )
 
 # Task 4
@@ -120,13 +119,23 @@ s.plt.stacked_bar(
 
 # Non guided tasks
 data = calculate_sale_by_region_group_by_date(sales_df.copy())
-this_last_week_sales_vs_prediction = calculate_this_last_week_sales_vs_prediction(sales_df.copy())
+this_last_week_sales_vs_prediction = calculate_this_last_week_sales_vs_prediction(
+    sales_df.copy()
+)
 sales_date_float = this_last_week_sales_vs_prediction["Región 1"]["This week"]["Ventas"]
-prediction_date_float = this_last_week_sales_vs_prediction["Región 1"]["This week"]["Percentage"]
-this_week_start_date = this_last_week_sales_vs_prediction["Start Date"].strftime("%d/%m/%Y")
+prediction_date_float = this_last_week_sales_vs_prediction["Región 1"]["This week"][
+    "Percentage"
+]
+this_week_start_date = this_last_week_sales_vs_prediction["Start Date"].strftime(
+    "%d/%m/%Y"
+)
 this_week_end_date = this_last_week_sales_vs_prediction["End Date"].strftime("%d/%m/%Y")
-last_week_start_date = this_last_week_sales_vs_prediction["Start Date Last Week"].strftime("%d/%m/%Y")
-last_week_end_date = this_last_week_sales_vs_prediction["End Date Last Week"].strftime("%d/%m/%Y")
+last_week_start_date = this_last_week_sales_vs_prediction[
+    "Start Date Last Week"
+].strftime("%d/%m/%Y")
+last_week_end_date = this_last_week_sales_vs_prediction["End Date Last Week"].strftime(
+    "%d/%m/%Y"
+)
 
 # Create a list of region names
 regions = list(this_last_week_sales_vs_prediction.keys())
@@ -145,8 +154,12 @@ for region_name in regions:
     s.plt.set_tabs_index(("Tabs", region_name), order=0)
 
     # Get percentage values
-    this_week_percentage = this_last_week_sales_vs_prediction[region_name]["This week"]["Percentage"]
-    last_week_percentage = this_last_week_sales_vs_prediction[region_name]["Last week"]["Percentage"]
+    this_week_percentage = this_last_week_sales_vs_prediction[region_name]["This week"][
+        "Percentage"
+    ]
+    last_week_percentage = this_last_week_sales_vs_prediction[region_name]["Last week"][
+        "Percentage"
+    ]
 
     # Plot gauge indicators
     s.plt.gauge_indicator(
@@ -154,7 +167,7 @@ for region_name in regions:
         order=0,
         rows_size=1,
         cols_size=6,
-        title="Last Week Sales vs Last Prediction",
+        title="Last week: Sales vs Prediction",
         description=f"Sales from {last_week_start_date} to {last_week_end_date}",
         color="success" if last_week_percentage >= 100 else "error",
     )
@@ -164,12 +177,11 @@ for region_name in regions:
         order=2,
         rows_size=1,
         cols_size=6,
-        title="This Week Sales vs Last Prediction",
+        title="This week: Sales vs Prediction",
         description=f"Sales from {this_week_start_date} to {this_week_end_date}",
         color="success" if this_week_percentage >= 100 else "error",
     )
 
-    print(data[region_name])
     # Plot stacked bar chart
     s.plt.stacked_bar(
         x="date",
@@ -177,6 +189,7 @@ for region_name in regions:
         title="Total Weekly Sales by Product (USD)",
         data=data[region_name],
         option_modifications={"dataZoom": {"show": True}, "toolbox": {"show": True}},
+        y_axis_name="Sales ($)",
     )
 
 # Pop out of tabs group

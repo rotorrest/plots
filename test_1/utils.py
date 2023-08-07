@@ -6,6 +6,7 @@ from collections import defaultdict
 
 from typing import Dict, Any, List, Union, Tuple
 
+
 def calculate_weeks(df):
     # Use current date
     today = pd.to_datetime("today")
@@ -23,8 +24,12 @@ def calculate_weeks(df):
     start_date_last_week = end_date_last_week - pd.DateOffset(days=6)
 
     # Create masks for the current week and last week
-    mask_this_week = (df["Fecha"] >= start_date_this_week) & (df["Fecha"] <= end_date_this_week)
-    mask_last_week = (df["Fecha"] >= start_date_last_week) & (df["Fecha"] <= end_date_last_week)
+    mask_this_week = (df["Fecha"] >= start_date_this_week) & (
+        df["Fecha"] <= end_date_this_week
+    )
+    mask_last_week = (df["Fecha"] >= start_date_last_week) & (
+        df["Fecha"] <= end_date_last_week
+    )
 
     return (
         mask_this_week,
@@ -34,6 +39,7 @@ def calculate_weeks(df):
         start_date_last_week,
         end_date_last_week,
     )
+
 
 # Main functions
 def calculate_sales_by_day_of_the_week(sales_df: pd.DataFrame):
@@ -48,39 +54,54 @@ def calculate_sales_by_day_of_the_week(sales_df: pd.DataFrame):
               start and end dates of this week and last week.
     """
     # Assuming the dataset is stored in a pandas DataFrame called 'sales_df'
-    
+
     # Calculate the masks and weeks as you've done in the calculate_weeks function.
-    mask_this_week, mask_last_week, start_date, end_date, start_date_last_week, end_date_last_week = calculate_weeks(sales_df)
+    (
+        mask_this_week,
+        mask_last_week,
+        start_date,
+        end_date,
+        start_date_last_week,
+        end_date_last_week,
+    ) = calculate_weeks(sales_df)
 
     # List to store the output for each day of the week
     output_list = []
 
     # Define the days of the week
-    days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    days_of_week = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+    ]
 
     # Print the tail of the sales_df DataFrame to inspect the last 100 rows
 
     for day in days_of_week:
         # Filter data for this week and last week
-        filter_this_week = mask_this_week & (sales_df['Fecha'].dt.strftime('%A') == day)
-        filter_last_week = mask_last_week & (sales_df['Fecha'].dt.strftime('%A') == day)
-        
+        filter_this_week = mask_this_week & (sales_df["Fecha"].dt.strftime("%A") == day)
+        filter_last_week = mask_last_week & (sales_df["Fecha"].dt.strftime("%A") == day)
+
         df_this_week = sales_df.loc[filter_this_week]
         df_last_week = sales_df.loc[filter_last_week]
 
         # Calculate sales and predictions for this week and last week
-        sales_this_week = df_this_week['Ventas'].sum()
-        prediction_this_week = df_this_week['Prediccion'].sum()
-        sales_last_week = df_last_week['Ventas'].sum()
-        prediction_last_week = df_last_week['Prediccion'].sum()
+        sales_this_week = df_this_week["Ventas"].sum()
+        prediction_this_week = df_this_week["Prediccion"].sum()
+        sales_last_week = df_last_week["Ventas"].sum()
+        prediction_last_week = df_last_week["Prediccion"].sum()
 
         # Create the dictionary for this day and append to the output list
         day_data = {
-            'Day_of_Week': day,
-            'Sales this week': sales_this_week,
-            'Prediction this week': prediction_this_week,
-            'Sales last week': sales_last_week,
-            'Prediction last week': prediction_last_week
+            "Day_of_Week": day,
+            "Sales this week": sales_this_week,
+            "Prediction this week": prediction_this_week,
+            "Sales last week": sales_last_week,
+            "Prediction last week": prediction_last_week,
         }
         output_list.append(day_data)
 
@@ -89,8 +110,9 @@ def calculate_sales_by_day_of_the_week(sales_df: pd.DataFrame):
         "start_date": start_date.strftime("%d%m%Y"),
         "end_date": end_date.strftime("%d%m%Y"),
         "start_date_last_week": start_date_last_week.strftime("%d-%m-%Y"),
-        "end_date_last_week": end_date_last_week.strftime("%d-%m-%Y")
+        "end_date_last_week": end_date_last_week.strftime("%d-%m-%Y"),
     }
+
 
 def calculate_data_indicators(df: pd.DataFrame) -> List[Dict[str, Any]]:
     """
@@ -146,7 +168,7 @@ def calculate_data_indicators(df: pd.DataFrame) -> List[Dict[str, Any]]:
     for idx, row in sales_comparison.iterrows():
         indicator = {}
         indicator["description"] = row["Producto"]
-        indicator["title"] = "Diferente to match prediccion"
+        indicator["title"] = "Difference to match prediccion"
         indicator["value"] = (
             row["Ventas Semana Actual"] - row["Prediccion Semana Actual"]
         )
@@ -161,6 +183,7 @@ def calculate_data_indicators(df: pd.DataFrame) -> List[Dict[str, Any]]:
             ] = "success"  # Green if actual sales are equal to or greater than predictions
         data_indicator.append(indicator)
     return data_indicator
+
 
 def calculate_sales_percentage_by_region(
     sales_df: pd.DataFrame,
@@ -195,7 +218,10 @@ def calculate_sales_percentage_by_region(
     # Each dictionary corresponds to a data entry for visualization
     return sales_by_region[["Región", "Percentage"]].to_dict("records")
 
-def calculate_sales_by_month(sales_df: pd.DataFrame) -> Dict[str, Union[List[Dict[str, Union[str, float]]], int]]:
+
+def calculate_sales_by_month(
+    sales_df: pd.DataFrame,
+) -> Dict[str, Union[List[Dict[str, Union[str, float]]], int]]:
     """
     Calculate the total sales for each product by month and consider predictions if available.
 
@@ -213,10 +239,16 @@ def calculate_sales_by_month(sales_df: pd.DataFrame) -> Dict[str, Union[List[Dic
     sales_df["Fecha"] = pd.to_datetime(sales_df["Fecha"])
 
     # Replace 'Ventas' equal to 0 with 'Prediccion' values
-    sales_df["Ventas"] = np.where(sales_df["Ventas"] == 0, sales_df["Prediccion"], sales_df["Ventas"])
+    sales_df["Ventas"] = np.where(
+        sales_df["Ventas"] == 0, sales_df["Prediccion"], sales_df["Ventas"]
+    )
 
     # Aggregate the data by month and product, summing up the sales and predictions
-    sales_df = sales_df.groupby([pd.Grouper(key='Fecha', freq='M'), "Producto"]).agg({"Ventas": "sum", "Prediccion": "sum"}).reset_index()
+    sales_df = (
+        sales_df.groupby([pd.Grouper(key="Fecha", freq="M"), "Producto"])
+        .agg({"Ventas": "sum", "Prediccion": "sum"})
+        .reset_index()
+    )
 
     # Calculate the number of predictions that match actual sales data
     num_predictions = len(sales_df[sales_df["Ventas"] != sales_df["Prediccion"]])
@@ -244,11 +276,14 @@ def calculate_sales_by_month(sales_df: pd.DataFrame) -> Dict[str, Union[List[Dic
 
     # Loop through the list of dictionaries to count future dates
     for item in data_list:
-        fecha = item.get('Fecha')
-        if fecha.year > current_year or (fecha.year == current_year and fecha.month > current_month):
+        fecha = item.get("Fecha")
+        if fecha.year > current_year or (
+            fecha.year == current_year and fecha.month > current_month
+        ):
             future_values_count += 1
 
     return {"data": data_list, "num_predictions": future_values_count}
+
 
 def calculate_sales_per_month(sales_df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -314,6 +349,7 @@ def calculate_sales_per_month(sales_df: pd.DataFrame) -> pd.DataFrame:
 
     return pivot_sales
 
+
 def calculate_sale_by_region_group_by_date(df: pd.DataFrame):
     """
     Process the dataframe by region, filtering out future dates and storing the sales data.
@@ -349,14 +385,14 @@ def calculate_sale_by_region_group_by_date(df: pd.DataFrame):
             if datetime.datetime.strptime(date, "%Y-%m-%d").date() <= current_date:
                 # Check if the data for the current week already exists in 'data' list
                 week_start_date = pd.to_datetime(date).to_period("W").start_time.date()
-                existing_data = next((d for d in data if d["start_date"] == week_start_date), None)
+                existing_data = next(
+                    (d for d in data if d["start_date"] == week_start_date), None
+                )
 
                 if existing_data:
                     existing_data[row["Producto"]] = ventas
                 else:
-                    product_data = {
-                        "start_date": week_start_date
-                    }
+                    product_data = {"start_date": week_start_date}
                     for prod in unique_products:
                         product_data[prod] = 0 if prod != row["Producto"] else ventas
                     data.append(product_data)
@@ -381,6 +417,7 @@ def calculate_sale_by_region_group_by_date(df: pd.DataFrame):
         ]
 
     return region_data
+
 
 def calculate_this_last_week_sales_vs_prediction(df: pd.DataFrame):
     """
