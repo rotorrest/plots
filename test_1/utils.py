@@ -1,9 +1,10 @@
 import pandas as pd
+import numpy as np
+
 import datetime
 from collections import defaultdict
 
 from typing import Dict, Any, List, Union, Tuple
-
 
 def calculate_weeks(df):
     # Use current date
@@ -33,7 +34,6 @@ def calculate_weeks(df):
         start_date_last_week,
         end_date_last_week,
     )
-
 
 # Main functions
 def calculate_sales_by_day_of_the_week(sales_df: pd.DataFrame):
@@ -91,7 +91,6 @@ def calculate_sales_by_day_of_the_week(sales_df: pd.DataFrame):
         "start_date_last_week": start_date_last_week.strftime("%d-%m-%Y"),
         "end_date_last_week": end_date_last_week.strftime("%d-%m-%Y")
     }
-
 
 def calculate_data_indicators(df: pd.DataFrame) -> List[Dict[str, Any]]:
     """
@@ -163,7 +162,6 @@ def calculate_data_indicators(df: pd.DataFrame) -> List[Dict[str, Any]]:
         data_indicator.append(indicator)
     return data_indicator
 
-
 def calculate_sales_percentage_by_region(
     sales_df: pd.DataFrame,
 ) -> List[Dict[str, Union[str, float]]]:
@@ -199,7 +197,7 @@ def calculate_sales_percentage_by_region(
 
 def calculate_sales_by_month(sales_df: pd.DataFrame) -> List[Dict[str, Union[str, float]]]:
     """
-    Calculate the total sales for each product by month.
+    Calculate the total sales for each product by month, also its going to considerate predictions.
 
     Args:
         sales_df (pd.DataFrame): The pandas DataFrame containing sales data.
@@ -208,19 +206,50 @@ def calculate_sales_by_month(sales_df: pd.DataFrame) -> List[Dict[str, Union[str
         List[Dict[str, Union[str, float]]]: A list of dictionaries, each containing
             'Fecha' (date in 'YYYY-MM' format) and sales data for each product.
     """
-    # Group by 'Producto' and 'Fecha' and sum the 'Ventas' column
-    monthly_sum = sales_df.groupby(['Producto', sales_df['Fecha'].dt.to_period('M')])['Ventas'].sum().reset_index()
 
-    # Convert the Period object to string in 'YYYY-MM' format
-    monthly_sum['Fecha'] = monthly_sum['Fecha'].astype(str)
-    monthly_sum['Fecha'] = pd.to_datetime(monthly_sum['Fecha'])
-    monthly_sum["Fecha"] = monthly_sum["Fecha"].dt.date
 
-    # Pivot the DataFrame to have Producto as columns and Fecha as rows, with Ventas as values
-    pivot_table = monthly_sum.pivot_table(index='Fecha', columns='Producto', values='Ventas', fill_value=0)
+    # Step 2: Convert 'Fecha' column to datetime data type
+    sales_df["Fecha"] = pd.to_datetime(sales_df["Fecha"])
 
-    # Convert the pivot table to a list of dictionaries with the desired format
-    return pivot_table.reset_index().to_dict(orient='records')
+    # Step 3: Replace 'Ventas' equal to 0 with 'Prediccion' values
+    sales_df["Ventas"] = np.where(sales_df["Ventas"] == 0, sales_df["Prediccion"], sales_df["Ventas"])
+
+    # Agrupar los datos por mes y sumar las ventas para cada mes por producto keep the prediction
+    sales_df = sales_df.groupby([pd.Grouper(key='Fecha', freq='M'), "Producto"]).agg({"Ventas": "sum", "Prediccion": "sum"}).reset_index()
+
+    # number of predictions that match ventas from now
+    num_predictions = len(sales_df[sales_df["Ventas"] != sales_df["Prediccion"]])
+
+    # Step 4: Drop the 'Prediccion' column as it is no longer needed
+    sales_df.drop(columns=["Prediccion"], inplace=True)
+
+    # Step 5: Group data by 'Fecha' and create dictionaries for each unique date
+    data_list = []
+    for fecha, group_data in sales_df.groupby("Fecha"):
+        # Create a dictionary for each date
+        date_dict = {"Fecha": fecha.date()}
+        # Add sales data for each product on that date
+        for _, row in group_data.iterrows():
+            date_dict[row["Producto"]] = row["Ventas"]
+        # Append the dictionary to the data_list
+        data_list.append(date_dict)
+        
+    # Get the current year and month
+    current_year = datetime.date.today().year
+    current_month = datetime.date.today().month
+
+    # Initialize a counter for future values
+    future_values_count = 0
+
+    # Loop through the list of dictionaries
+    for item in data_list:
+        fecha = item.get('Fecha')
+        if fecha.year > current_year or (fecha.year == current_year and fecha.month > current_month):
+            future_values_count += 1
+
+
+    return {"data": data_list, "num_predictions": future_values_count}
+    
 
 def calculate_sales_per_month(sales_df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -286,8 +315,7 @@ def calculate_sales_per_month(sales_df: pd.DataFrame) -> pd.DataFrame:
 
     return pivot_sales
 
-
-def calculate_sale_by_region_group_by_date(df):
+def calculate_sale_by_region_group_by_date(df: pd.DataFrame):
     """
     Process the dataframe by region, filtering out future dates and storing the sales data.
 
@@ -355,7 +383,7 @@ def calculate_sale_by_region_group_by_date(df):
 
     return region_data
 
-def calculate_this_last_week_sales_vs_prediction(df):
+def calculate_this_last_week_sales_vs_prediction(df: pd.DataFrame):
     """
     Calculate sales and prediction data for this week and last week and their percentage difference.
 

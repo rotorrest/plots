@@ -5,10 +5,10 @@ from os import getenv
 
 from prueba_acceso import generar_datos_ventas
 from utils import (
-    generate_plot_data,
-    venta_mensual,
-    acumulado_mensual,
-)
+    calculate_generate_plot_data,
+    calculate_monthly_sales,
+    calculate_cumulative_monthly_sales
+    )
 
 # Load environment variables
 load_dotenv()
@@ -30,32 +30,30 @@ s.set_workspace(uuid=workspace_id)
 s.set_board("Rodrigo Torres")
 
 
-# data = generate_plot_data(df.copy())
+plot1_data = calculate_generate_plot_data(df.copy())
+monthly_sales = calculate_monthly_sales(df.copy())
+cumulative_monthly_sales = calculate_cumulative_monthly_sales(df.copy())
 
-data_t2 = venta_mensual(df.copy())
-
-data_t3 = acumulado_mensual(df.copy())
-
-
-# # Task 1
-# s.set_menu_path("Prueba-2", "Daily Sales2")
-# s.plt.html(
-#     html=(f"<h1>The following plots contain the same information</h1>"),
-#     order=0,
-# )
-# s.plt.html(
-#     html=(f"<h3>Monthly Sales</h3>"),
-#     order=1,
-# )
-# s.plt.bar(data=data, order=2, x="Fecha")
-# s.plt.line(data=data, order=3, x="Fecha", rows_size=3, cols_size=6)
-# s.plt.stacked_bar(data=data, order=4, x="Fecha", rows_size=3, cols_size=6)
+    
+# Task 1
+s.set_menu_path("Prueba-v2", "Daily Sales")
+s.plt.html(
+    html=(f"<h1>The following plots contain the same information</h1>"),
+    order=0,
+)
+s.plt.html(
+    html=(f"<h3>By month</h3>"),
+    order=1,
+)
+s.plt.bar(data=plot1_data, order=2, x="Fecha")
+s.plt.line(data=plot1_data, order=3, x="Fecha", rows_size=3, cols_size=6)
+s.plt.stacked_bar(data=plot1_data, order=4, x="Fecha", rows_size=3, cols_size=6)
 
 # Task 2
-s.set_menu_path("Prueba-3", "Sales Accumulated")
+s.set_menu_path("Prueba-v2", "Sales Accumulated")
 
 s.plt.set_tabs_index(("Charts", "Montly Sales"), order=0)
-s.plt.bar(data=data_t2,
+s.plt.bar(data=monthly_sales,
           order=0,
           x="Fecha",
           y_axis_name="Sales ($)",
@@ -64,7 +62,7 @@ s.plt.bar(data=data_t2,
 s.plt.change_current_tab("Montly Accumulated Sales")
 s.plt.bar(x="Fecha",
         order=0,
-        data=data_t3,
+        data=cumulative_monthly_sales,
         y_axis_name="Sales ($)",
 )
 s.plt.pop_out_of_tabs_group()

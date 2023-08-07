@@ -1,12 +1,22 @@
 import pandas as pd
 import datetime as dt
 
-def generate_plot_data(df):
-    # Convertir la columna 'Fecha' al tipo de dato datetime
+def calculate_generate_plot_data(df):
+    """
+    Create a dictionary to store the sum of sales for each product per month.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame containing sales data, with columns 'Fecha' (Date) and 'Ventas' (Sales).
+
+    Returns:
+        list: A list of dictionaries containing the sum of sales for each product per month, in the format:
+              [{'Fecha': 'YYYY-MM', 'Product1': sum_sales1, 'Product2': sum_sales2, ...}, ...]
+    """
+    # Convert the 'Fecha' column to datetime data type
     df["Fecha"] = pd.to_datetime(df["Fecha"])
 
-    # Agrupar por mes y producto, y sumar las ventas
-    ventas_mensuales = (
+    # Group by month and product, and sum the sales
+    monthly_sales = (
         df[df["Ventas"] > 0]
         .groupby([pd.Grouper(key="Fecha", freq="M"), "Producto"])
         .agg({"Ventas": "sum"})
@@ -14,10 +24,10 @@ def generate_plot_data(df):
     )
 
     # Reset index to convert the DataFrame into a list of dictionaries
-    ventas_mensuales = ventas_mensuales.reset_index()
+    monthly_sales = monthly_sales.reset_index()
 
     # Convert the DataFrame to a list of dictionaries
-    data = ventas_mensuales.to_dict(orient="records")
+    data = monthly_sales.to_dict(orient="records")
 
     # Convert the list of dictionaries to the desired output format
     output_data = []
@@ -30,46 +40,63 @@ def generate_plot_data(df):
 
     return output_data
 
-def venta_mensual(df):
-    # Asegúrate de que la columna 'Fecha' es de tipo datetime
+
+def calculate_monthly_sales(df):
+    """
+    Calculate monthly sales and return the data in a list of dictionaries.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame with sales data, containing a 'Date' column and a 'Sales' column.
+
+    Returns:
+        list: A list of dictionaries with the total monthly sales and dates in 'YYYY-MM-DD' format.
+    """
+    # Ensure 'Date' is of type datetime
     df["Fecha"] = pd.to_datetime(df["Fecha"])
 
-    # Agrupa los datos por mes y suma las ventas para cada mes
-    totales_mensuales = df.groupby(pd.Grouper(key="Fecha", freq="M"))["Ventas"].sum().reset_index()
+    # Group the data by month and sum the sales for each month
+    monthly_totals = df.groupby(pd.Grouper(key="Fecha", freq="M"))["Ventas"].sum().reset_index()
 
-    # Eliminar los registros con ventas igual a 0 para fechas futuras
-    hoy = pd.Timestamp(dt.date.today())
-    totales_mensuales = totales_mensuales[totales_mensuales["Fecha"] <= hoy]
+    # Remove records with zero sales for future dates
+    today = pd.Timestamp(dt.date.today())
+    monthly_totals = monthly_totals[monthly_totals["Fecha"] <= today]
 
-    # Asegurarse de que la fecha se convierta al formato correcto para la API de Shimoku
-    totales_mensuales["Fecha"] = totales_mensuales["Fecha"].dt.strftime("%Y-%m-%d")
+    # Make sure the date is converted to the correct format for the Shimoku API
+    #monthly_totals["Fecha"] = monthly_totals["Fecha"].dt.strftime("%Y-%m-%d")
 
-    data = totales_mensuales.to_dict("records")
+    data = monthly_totals.to_dict("records")
 
     return data
 
-def acumulado_mensual(df):
-    # Suponiendo que 'df' es tu DataFrame
-    df["Fecha"] = pd.to_datetime(df["Fecha"])
+def calculate_cumulative_monthly_sales(df):
+    """
+    Calculate cumulative monthly sales and return the data in a list of dictionaries.
 
-    # Obtener la fecha mínima en el DataFrame como fecha inicial
-    fecha_inicial = df["Fecha"].min()
+    Parameters:
+        df (pd.DataFrame): DataFrame with sales data, containing a 'Date' column and a 'Sales' column.
 
-    df_meses = df[(df["Fecha"] >= fecha_inicial)]
+    Returns:
+        list: A list of dictionaries with the cumulative monthly sales and dates in 'YYYY-MM-DD' format.
+    """
+    df["Date"] = pd.to_datetime(df["Fecha"])
 
-    # Filtrar filas con ventas mayores a 0 para evitar la acumulación de ceros en el futuro
-    df_meses = df_meses[df_meses["Ventas"] > 0]
+    # Get the minimum date in the DataFrame as the initial date
+    initial_date = df["Date"].min()
 
-    # Agrupar los datos por mes y sumar las ventas para cada mes
-    df_meses = df_meses.groupby(pd.Grouper(key="Fecha", freq="M")).agg({"Ventas": "sum"}).reset_index()
+    df_months = df[df["Date"] >= initial_date]
 
-    # Calcular la columna de ventas acumuladas
-    df_meses["acumulado"] = df_meses["Ventas"].cumsum()
+    # Filter rows with sales greater than 0 to avoid zero accumulation in the future
+    df_months = df_months[df_months["Ventas"] > 0]
 
-    # Asegurarse de que la fecha se convierta al formato correcto para la API de Shimoku
-    df_meses["Fecha"] = df_meses["Fecha"].dt.strftime("%Y-%m-%d")
+    # Group the data by month and sum the sales for each month
+    df_months = df_months.groupby(pd.Grouper(key="Fecha", freq="M")).agg({"Ventas": "sum"}).reset_index()
 
-    # Creamos el diccionario
-    dict_list = [{"Fecha": row["Fecha"], "acumulado": row["acumulado"]} for _, row in df_meses.iterrows()]
+    # Calculate the cumulative sales column
+    df_months["cumulative"] = df_months["Ventas"].cumsum()
 
+    # Make sure the date is converted to the correct format for the Shimoku API
+    df_months["Date"] = df_months["Fecha"].dt.strftime("%Y-%m-%d")
+
+    # Create the dictionary
+    dict_list = [{"Fecha": row["Date"], "cumulative": row["cumulative"]} for _, row in df_months.iterrows()]
     return dict_list
